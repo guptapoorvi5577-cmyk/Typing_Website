@@ -1,18 +1,57 @@
+const bcrypt = require('bcryptjs');
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+// --- REGISTRATION ROUTE ---
+router.post('/register', async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
 
-// This is the route that will handle login requests
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const newUser = new User({ 
+            username, 
+            email,
+            password: hashedPassword 
+        });
+
+        await newUser.save();
+        res.status(201).json({ message: "User registered successfully!" });
+    } catch (error) {
+        res.status(500).json({ error: "Registration failed" });
+    }
+});
+
+// --- LOGIN ROUTE (FIXED) ---
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
-        // Find user by email
+        // 1. Find user by email
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ message: "User not found" });
-        if (user.password !== password) return res.status(400).json({ message: "Invalid credentials" });
+
+        // 2. Use bcrypt.compare to check the hashed password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+        // 1. Create the token
+const token = jwt.sign(
+    { userId: user._id }, 
+    process.env.JWT_SECRET, // Make sure this is defined in your .env file
+    { expiresIn: '1h' }     // The token expires in 1 hour
+);
+
+// 2. Send the token back to the frontend
+res.json({ 
+    message: "Login successful!", 
+    token: token // This is what the frontend will save
+});
+        // 3. Login successful
         res.json({ message: "Login successful!" });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
 });
+
 module.exports = router;
