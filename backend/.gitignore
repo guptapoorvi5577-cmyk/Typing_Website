@@ -1,3 +1,26 @@
-node_modules/
+# --- Environment Variables ---
+# This ensures your .env file with real passwords is never uploaded
 .env
-*.log
+
+# --- Node.js ---
+# node_modules are huge and can be re-installed using 'npm install'
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-test.log
+
+# --- Build Output ---
+# Ignore folders where your code is compiled
+dist
+build
+out
+
+# --- Operating System Files ---
+# Ignore system-specific files that shouldn't be in a repo
+.DS_Store
+Thumbs.db
+
+# --- Editors/IDE ---
+# Ignore personal IDE configurations
+.vscode/
+.idea/

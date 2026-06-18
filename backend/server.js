@@ -12,7 +12,8 @@ app.use(cors());
 // Routes
 const authRoutes = require('./routes/authRoutes'); // Make sure this filename matches your file
 app.use('/api/auth', authRoutes);
-
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/scores', require('./routes/scoreRoutes'));
 // Server setup
 const PORT = process.env.PORT || 5000;
 // Database Connection
