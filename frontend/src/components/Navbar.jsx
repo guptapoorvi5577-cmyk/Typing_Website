@@ -67,13 +67,6 @@ export default function Navbar() {
           >
             Login
           </Link>
-
-          <Link
-            to="/signup"
-            className="px-4 py-1.5 rounded-full border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-          >
-            Sign up
-          </Link>
         </div>
       </div>
 
