@@ -1,23 +1,28 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors'); // Helps frontend/backend talk to each other
+const cors = require('cors');
 require('dotenv').config();
+const { connect } = require('./config/database');
 
 const app = express();
 
-// Middleware: Allows server to understand JSON and handle cross-origin requests
+// Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({ 
+    origin: 'http://localhost:3000',
+    credentials: true 
+}));
+
+// Database Connection
+connect();
 
 // Routes
-const authRoutes = require('./routes/authRoutes'); // Make sure this filename matches your file
-app.use('/api/auth', authRoutes);
+// These routes match the files visible in your backend/routes directory
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/scores', require('./routes/scoreRoutes'));
-// Server setup
+
 const PORT = process.env.PORT || 5000;
-// Database Connection
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected successfully!"))
-  .catch((err) => console.log("Database connection failed:", err));
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
