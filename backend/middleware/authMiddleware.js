@@ -1,38 +1,59 @@
-// backend/middleware/authMiddleware.js
+const jwt = require('jsonwebtoken');
 
-import jwt from 'jsonwebtoken';
+require('dotenv').config();
 
-const authMiddleware = (req, res, next) => {
+exports.auth = (req, res, next)=>{
 
-  // Step 1 — Check if Authorization header exists and starts with "Bearer "
-  const authHeader = req.headers.authorization;
+    try{
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Access denied. No token provided.' });
-  }
+        const token = req.cookies?.token || req.body?.token || req.header('Authorization')?.replace('Bearer ', '');
 
-  // Step 2 — Extract the token (remove "Bearer " prefix)
-  const token = authHeader.split(' ')[1];
+        console.log("Authorization:", req.header("Authorization"));
+        console.log("Token:", token);
 
-  // Step 3 — Verify the token using your JWT secret
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if(!token){
 
-    // Step 4 — Attach user info to the request object
-    // Now any route using this middleware can access req.user
-    req.user = decoded; // contains { id, username, email }
+            return res.status(401).json({
 
-    next(); // move to the actual route handler
+                success: false,
+                message: 'token missing'
 
-  } catch (err) {
+            });
 
-    // Token is expired or tampered with
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'Token expired. Please log in again.' });
+        }
+
+        //verify token
+        try{
+
+            const payload = jwt.verify(token, process.env.JWT_SECRET);
+            console.log(payload);
+            req.user = payload;
+
+        }
+        catch(err){
+
+            console.error(err);
+            return res.status(401).json({
+
+                success: false,
+                message: 'token is invalid'
+
+            });
+
+        }
+
+        next();
+        
+    }
+    catch(err){
+
+        return res.status(500).json({
+
+            success: false,
+            message: 'server error'
+
+        })
+
     }
 
-    return res.status(401).json({ error: 'Invalid token.' });
-  }
-};
-
-export default authMiddleware;
+}

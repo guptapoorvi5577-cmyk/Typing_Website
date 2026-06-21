@@ -19,8 +19,7 @@ const scoreSchema = new mongoose.Schema(
           required: true,
         },
         duration:{
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Paragraph',
+          type: Number,
           required: true
         },
         paragraphId:{
