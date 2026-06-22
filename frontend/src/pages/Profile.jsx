@@ -7,22 +7,20 @@ function Profile() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+ useEffect(() => {
     const fetchProfile = async () => {
+      // 1. Retrieve the saved token
       const token = localStorage.getItem('token');
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+      if (!token) return; 
+
       try {
+        // 2. Send the token in the Authorization header
         const res = await axios.get('https://typing-website-kr3a.onrender.com/api/v1/scores/latest', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setScore(res.data.data);
       } catch (err) {
         setError(err.response?.data?.message || 'Could not load profile data');
-      } finally {
-        setLoading(false);
       }
     };
     fetchProfile();
