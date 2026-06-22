@@ -11,7 +11,7 @@ function Signup() {
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://typing-website-f8me.onrender.com/api/v1/user/signup', {
+      await axios.post('https://typing-website-kr3a.onrender.com/api/v1/user/signup', {
         name,
         email,
         password
