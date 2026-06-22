@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -8,7 +9,7 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:4000/api/auth/login', {
+      const response = await axios.post('http://localhost:4000/api/v1/user/login', {
         email,
         password
       });
@@ -38,7 +39,12 @@ function Login() {
         <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-200">
           Sign In
         </button>
+                <p className="text-center text-sm text-gray-600 mt-4">
+          Don't have an account? <Link to="/signup" className="text-blue-600 font-semibold hover:underline">Sign Up</Link>
+        </p>
       </form>
+
+      
     </div>
   );
 }

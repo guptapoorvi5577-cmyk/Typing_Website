@@ -10,7 +10,7 @@ function Profile() {
   useEffect(() => {
     if (!token) return;
 
-    axios.get('http://localhost:5000/api/scores/latest', {
+    axios.get('http://localhost:4000/api/v1/scores/latest', {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then((res) => setScore(res.data.data))

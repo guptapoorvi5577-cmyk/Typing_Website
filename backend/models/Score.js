@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Paragraph = require("./Paragraph");
 
+
 const scoreSchema = new mongoose.Schema(
   {
     userId: {
