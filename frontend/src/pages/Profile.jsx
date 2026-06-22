@@ -10,7 +10,7 @@ function Profile() {
   useEffect(() => {
     if (!token) return;
 
-    axios.get('https://typing-website-d7y2.onrender.com//api/v1/scores/latest', {
+    axios.get('https://typing-website-f8me.onrender.com/api/v1/scores/latest', {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then((res) => setScore(res.data.data))
