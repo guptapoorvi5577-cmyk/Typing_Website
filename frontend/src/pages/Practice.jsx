@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 const PASSAGES = [
   "The quick brown fox jumps over the lazy dog. A good typist can type quickly and accurately without constantly looking at the keyboard. Regular practice improves speed, reduces errors, and builds confidence. Consistency is the key to becoming a skilled and efficient typist.",
@@ -58,7 +58,6 @@ export default function Practice() {
   const [running, setRunning] = useState(false);
   const [finished, setFinished] = useState(false);
   const [result, setResult] = useState(null);
-  const [stats, setStats] = useState(INITIAL_STATS);
 
   const inputRef = useRef(null);
   const timerRef = useRef(null);

@@ -5,24 +5,37 @@ import axios from 'axios';
 function Profile() {
   const [score, setScore] = useState(null);
   const [error, setError] = useState('');
-  const token = localStorage.getItem('token');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!token) return;
+    const fetchProfile = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
-    axios.get('https://typing-website-f8me.onrender.com/api/v1/scores/latest', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then((res) => setScore(res.data.data))
-      .catch((err) => setError(err.response?.data?.message || 'Could not load profile data'));
-  }, [token]);
+      try {
+        const res = await axios.get('https://typing-website-kr3a.onrender.com/api/v1/scores/latest', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setScore(res.data.data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Could not load profile data');
+      } finally {
+        // This ensures the loading message disappears after the request finishes
+        setLoading(false); 
+      }
+    };
+    fetchProfile();
+  }, []);
 
-  if (!token) {
+  if (!localStorage.getItem('token')) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-md text-center">
-          <p className="text-gray-700 mb-4">You need to log in to view your profile.</p>
-          <Link to="/login" className="text-blue-600 hover:underline">Go to Login</Link>
+          <p className="mb-4">You need to log in to view your profile.</p>
+          <Link to="/login" className="text-blue-600 underline">Go to Login</Link>
         </div>
       </div>
     );
@@ -31,28 +44,19 @@ function Profile() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">My Profile</h2>
-
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-
-        {score ? (
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Last WPM</span>
-              <span className="font-bold text-gray-800">{score.wpm}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Last Accuracy</span>
-              <span className="font-bold text-gray-800">{score.accuracy}%</span>
-            </div>
-          </div>
-        ) : (
-          !error && <p className="text-gray-500 text-center">No test results yet. Go take a typing test!</p>
+        <h2 className="text-2xl font-bold mb-6 text-center">My Profile</h2>
+        {loading ? <p className="text-center">Loading...</p> : (
+          <>
+            {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+            {score ? (
+              <div className="space-y-3">
+                <p>Last WPM: <strong>{score.wpm}</strong></p>
+                <p>Last Accuracy: <strong>{score.accuracy}%</strong></p>
+              </div>
+            ) : !error && <p className="text-center">No test results yet.</p>}
+          </>
         )}
-
-        <Link to="/practice" className="block text-center mt-6 text-blue-600 hover:underline">
-          Take a new test
-        </Link>
+        <Link to="/practice" className="block mt-6 text-blue-600 hover:underline text-center">Take a new test</Link>
       </div>
     </div>
   );
