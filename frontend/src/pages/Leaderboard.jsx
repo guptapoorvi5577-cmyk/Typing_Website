@@ -17,7 +17,7 @@ function Leaderboard() {
       return;
     }
 
-    axios.get('http://localhost:4000/api/v1/leaderboard/leaderboard', {
+    axios.get('https://typing-website-d7y2.onrender.com/api/v1/leaderboard/leaderboard', {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then((res) => {
