@@ -6,23 +6,24 @@ function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-
-  const handleLogin = async (e) => {
+ const handleLogin = async (e) => {
     e.preventDefault();
     try {
       const response = await axios.post('https://typing-website-kr3a.onrender.com/api/v1/user/login', {
         email,
         password
       });
-      // Store the token to identify the session
+      // 1. Store the token so the app "remembers" the user
       localStorage.setItem('token', response.data.token);
+      
       alert('Login Successful!');
+      
+      // 2. Redirect to profile
       navigate('/profile'); 
     } catch (error) {
       alert('Login Failed: ' + (error.response?.data?.message || 'Error'));
     }
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <form onSubmit={handleLogin} className="bg-white p-8 rounded-lg shadow-md w-96">
