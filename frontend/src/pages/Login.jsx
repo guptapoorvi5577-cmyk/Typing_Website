@@ -9,7 +9,7 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('https://typing-website-f8me.onrender.com/api/v1/user/login', {
+      const response = await axios.post('https://typing-website-kr3a.onrender.com/api/v1/user/login', {
         email,
         password
       });
