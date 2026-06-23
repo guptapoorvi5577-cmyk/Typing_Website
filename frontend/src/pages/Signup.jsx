@@ -2,63 +2,84 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
+const BASE = 'https://typing-website-kr3a.onrender.com/api/v1';
+
 function Signup() {
-  const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const navigate  = useNavigate();
+  const [name, setName]         = useState('');
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
     try {
-      await axios.post('https://typing-website-kr3a.onrender.com/api/v1/user/signup', {
-        name,
-        email,
-        password
-      });
-      alert('Signup Successful! Please log in.');
-      navigate('/login');
-    } catch (error) {
-      alert('Signup Failed: ' + (error.response?.data?.message || 'Error'));
+      await axios.post(`${BASE}/user/signup`, { name, email, password });
+      // Auto login after signup — no extra step needed
+      const res = await axios.post(`${BASE}/user/login`, { email, password });
+      localStorage.setItem('token', res.data.token);
+      navigate('/profile');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Signup failed. Try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleSignup} className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Sign Up</h2>
-        <input
-          type="text"
-          placeholder="Name"
-          className="w-full p-2 mb-4 border border-gray-300 rounded"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full p-2 mb-4 border border-gray-300 rounded"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full p-2 mb-6 border border-gray-300 rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-200">
-          Create Account
-        </button>
-        <p className="text-center text-sm text-gray-500 mt-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-slate-950 transition-colors">
+      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 p-8 rounded-2xl shadow-md w-96">
+        <h2 className="text-2xl font-bold mb-1 text-center text-gray-800 dark:text-slate-100">Create account</h2>
+        <p className="text-center text-sm text-gray-400 dark:text-slate-500 mb-6">Start testing your typing speed</p>
+
+        {error && (
+          <div className="mb-4 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-2.5 text-center">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSignup} className="space-y-4">
+          <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-cyan-500 transition"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-cyan-500 transition"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-cyan-500 transition"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2.5 rounded-lg bg-slate-900 dark:bg-cyan-500 text-white dark:text-slate-900 font-semibold hover:opacity-90 transition disabled:opacity-50"
+          >
+            {loading ? 'Creating account…' : 'Create Account'}
+          </button>
+        </form>
+
+        <p className="text-center text-sm text-gray-500 dark:text-slate-400 mt-5">
           Already have an account?{' '}
-          <Link to="/login" className="text-blue-600 hover:underline">Log in</Link>
+          <Link to="/login" className="text-blue-600 dark:text-cyan-400 font-semibold hover:underline">Log in</Link>
         </p>
-      </form>
+      </div>
     </div>
   );
 }
