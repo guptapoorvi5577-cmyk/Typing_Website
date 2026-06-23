@@ -30,7 +30,6 @@ function fmtTime(s) {
   return `${m}:${sec}`;
 }
 
-// Character-based accuracy calculation
 function calcStats(typedStr, passageStr, elapsedSeconds) {
   const minutes = Math.max(elapsedSeconds / 60, 0.01);
   const wpm = Math.round((typedStr.length / 5) / minutes);
