@@ -30,16 +30,19 @@ function fmtTime(s) {
 }
 
 function calcStats(typedStr, passageStr, elapsedSeconds) {
-  const wordsTyped = typedStr.trim().split(/\s+/).filter(Boolean);
-  const referenceWords = passageStr.trim().split(/\s+/);
   const minutes = Math.max(elapsedSeconds / 60, 0.01);
+  const wpm = Math.round((typedStr.length / 5) / minutes);
+  let correctChars = 0;
+  for (let i = 0; i < typedStr.length; i++) {
+    if (typedStr[i] === passageStr[i]) {
+      correctChars++;
+    }
+  }
+  
+  const accuracy = typedStr.length > 0 
+    ? Math.round((correctChars / typedStr.length) * 100 * 10) / 10 
+    : 100;
 
-  const completedWords = typedStr.endsWith(" ") ? wordsTyped : wordsTyped.slice(0, -1);
-  let correct = 0;
-  completedWords.forEach((w, i) => { if (w === referenceWords[i]) correct++; });
-
-  const wpm = Math.round(completedWords.length / minutes);
-  const accuracy = completedWords.length > 0 ? Math.round((correct / completedWords.length) * 100 * 10) / 10 : 0;
   return { wpm, accuracy };
 }
 
