@@ -58,18 +58,16 @@ function Profile() {
 
         {!loading && !error && stats ? (
           <>
-            {/* Overview */}
             <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
               <h3 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">Overview</h3>
               <div className="grid grid-cols-2 gap-3">
-                <StatCard label="Tests Taken"   value={stats.testsTaken} />
-                <StatCard label="Best WPM"      value={stats.bestWpm} sub="🏆 Personal Best" />
-                <StatCard label="Average WPM"   value={stats.avgWpm} />
-                <StatCard label="Avg Accuracy"  value={`${stats.avgAccuracy}%`} />
+                <StatCard label="Tests Taken"  value={stats.testsTaken} />
+                <StatCard label="Best WPM"     value={stats.bestWpm} sub="🏆 Personal Best" />
+                <StatCard label="Average WPM"  value={stats.avgWpm} />
+                <StatCard label="Avg Accuracy" value={`${stats.avgAccuracy}%`} />
               </div>
             </div>
 
-            {/* Last 5 tests */}
             {stats.last5?.length > 0 && (
               <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm">
                 <h3 className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">Last 5 Tests</h3>
