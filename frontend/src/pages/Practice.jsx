@@ -18,11 +18,11 @@ const PASSAGES = [
 
 const INITIAL_STATS = { avgWpm: 0, avgAccuracy: 0, testsTaken: 0 };
 const TEST_DURATION = 60;
-
 function randomPassage() {
-  return PASSAGES[Math.floor(Math.random() * PASSAGES.length)];
+  const first = PASSAGES[Math.floor(Math.random() * PASSAGES.length)];
+  const second = PASSAGES[Math.floor(Math.random() * PASSAGES.length)];
+  return `${first} ${second}`;
 }
-
 function fmtTime(s) {
   const m = String(Math.floor(s / 60)).padStart(2, "0");
   const sec = String(s % 60).padStart(2, "0");
