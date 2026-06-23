@@ -18,11 +18,13 @@ const PASSAGES = [
 
 const INITIAL_STATS = { avgWpm: 0, avgAccuracy: 0, testsTaken: 0 };
 const TEST_DURATION = 60;
+
 function randomPassage() {
   const first = PASSAGES[Math.floor(Math.random() * PASSAGES.length)];
   const second = PASSAGES[Math.floor(Math.random() * PASSAGES.length)];
   return `${first} ${second}`;
 }
+
 function fmtTime(s) {
   const m = String(Math.floor(s / 60)).padStart(2, "0");
   const sec = String(s % 60).padStart(2, "0");
@@ -34,15 +36,12 @@ function calcStats(typedStr, passageStr, elapsedSeconds) {
   const wpm = Math.round((typedStr.length / 5) / minutes);
   let correctChars = 0;
   for (let i = 0; i < typedStr.length; i++) {
-    if (typedStr[i] === passageStr[i]) {
-      correctChars++;
-    }
+    if (typedStr[i] === passageStr[i]) correctChars++;
   }
   
   const accuracy = typedStr.length > 0 
     ? Math.round((correctChars / typedStr.length) * 100 * 10) / 10 
     : 100;
-
   return { wpm, accuracy };
 }
 
@@ -58,7 +57,6 @@ export default function Practice() {
   const inputRef = useRef(null);
   const timerRef = useRef(null);
   const typedRef = useRef("");
-  const timeLeftRef = useRef(TEST_DURATION);
 
   const focusInput = () => inputRef.current?.focus();
 
@@ -96,7 +94,6 @@ export default function Practice() {
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         const next = prev - 1;
-        timeLeftRef.current = next;
         if (next <= 0) {
           clearInterval(timerRef.current);
           endTest(typedRef.current, 0);
@@ -125,7 +122,7 @@ export default function Practice() {
     typedRef.current = val;
     if (!running) startTimer();
     setTyped(val);
-    if (val.length >= passage.length) endTest(val, timeLeftRef.current);
+    if (val.length >= passage.length) endTest(val, timeLeft);
   }
 
   function renderPassage() {
@@ -145,8 +142,9 @@ export default function Practice() {
     });
   }
 
-  const elapsed = TEST_DURATION - timeLeft;
-  const { wpm: liveWpm, accuracy: liveAccuracy } = (running || finished) ? calcStats(typed, passage, elapsed) : { wpm: 0, accuracy: 0 };
+  const { wpm: liveWpm, accuracy: liveAccuracy } = (running || finished) 
+    ? calcStats(typed, passage, TEST_DURATION - timeLeft) 
+    : { wpm: 0, accuracy: 0 };
 
   return (
     <main className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300" onClick={focusInput}>
@@ -171,6 +169,28 @@ export default function Practice() {
             <p className="leading-loose tracking-wide break-words">{renderPassage()}</p>
             <input ref={inputRef} value={typed} onChange={handleInput} disabled={finished} className="absolute opacity-0" />
           </div>
+
+          {/* Result Summary Block */}
+          {finished && result && (
+            <div className="border-t border-gray-200 dark:border-slate-700 px-6 py-5 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex gap-8">
+                <div>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">Final WPM</p>
+                  <p className="text-3xl font-extrabold text-blue-600 dark:text-cyan-400 tabular-nums">{result.wpm}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">Accuracy</p>
+                  <p className="text-3xl font-extrabold text-green-500 tabular-nums">{result.accuracy}%</p>
+                </div>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); resetTest(); }}
+                className="px-6 py-2.5 rounded-full bg-slate-900 dark:bg-cyan-500 text-white dark:text-slate-900 font-semibold text-sm hover:scale-105 transition-all shadow"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </main>
