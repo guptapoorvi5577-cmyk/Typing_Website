@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import axios from "axios";
 
 const BASE = 'https://typing-website-kr3a.onrender.com/api/v1';
@@ -54,41 +54,44 @@ export default function Practice() {
 
   const focusInput = () => inputRef.current?.focus();
 
-  async function saveScore(wpm, accuracy) {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    try {
-      await axios.post(`${BASE}/score/saveTest`, {
-        wpm, accuracy, duration: TEST_DURATION, paragraphId: '000000000000000000000000',
-      }, { headers: { Authorization: `Bearer ${token}` } });
-    } catch (err) { console.warn('Could not save score'); }
-  }
-
-  function endTest(finalTyped, finalTimeLeft) {
+  const endTest = useCallback((finalTyped, finalTimeLeft) => {
     clearInterval(timerRef.current);
-    setRunning(false);
-    setFinished(true);
     const elapsed = TEST_DURATION - finalTimeLeft;
-    const stats = calcStats(finalTyped, passage, elapsed);
-    setResult(stats);
-    saveScore(stats.wpm, stats.accuracy);
-  }
+    const finalStats = calcStats(finalTyped, passage, elapsed);
+    
+    setResult(finalStats);
+    setFinished(true);
+    setRunning(false);
 
-  const startTimer = useCallback(() => {
-    if (running || finished) return;
+    const token = localStorage.getItem('token');
+    if (token) {
+      axios.post(`${BASE}/score/saveTest`, {
+        wpm: finalStats.wpm,
+        accuracy: finalStats.accuracy,
+        duration: TEST_DURATION,
+        paragraphId: '000000000000000000000000'
+      }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+    }
+  }, [passage]);
+
+  const startTimer = () => {
     setRunning(true);
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
-        const next = prev - 1;
-        if (next <= 0) {
+        if (prev <= 1) {
           clearInterval(timerRef.current);
-          endTest(typed, 0);
           return 0;
         }
-        return next;
+        return prev - 1;
       });
     }, 1000);
-  }, [running, finished, typed]);
+  };
+
+  useEffect(() => {
+    if (timeLeft === 0 && running) {
+      endTest(typed, 0);
+    }
+  }, [timeLeft, running, typed, endTest]);
 
   function resetTest() {
     clearInterval(timerRef.current);
@@ -106,56 +109,50 @@ export default function Practice() {
     if (!running) startTimer();
     const val = e.target.value;
     setTyped(val);
-    if (val.length >= passage.length) endTest(val, timeLeft);
+    if (val.length >= passage.length) endTest(val, timeLeft - 1);
   }
 
-  function renderPassage() {
-    return passage.split("").map((char, i) => {
-      let cls = "text-gray-400 dark:text-slate-500 transition-colors duration-150";
-      if (i < typed.length) {
-        cls = typed[i] === char ? "text-slate-800 dark:text-slate-100" : "text-red-500 dark:text-red-400 bg-red-100 dark:bg-red-900/40";
-      }
-      return (
-        <span key={i} className={`${cls} ${i === typed.length && running ? "border-l-2 border-blue-500 animate-pulse" : ""} font-mono text-lg`}>
-          {char}
-        </span>
-      );
-    });
-  }
-
-  const { wpm: liveWpm, accuracy: liveAccuracy } = (running || finished) ? calcStats(typed, passage, TEST_DURATION - timeLeft) : { wpm: 0, accuracy: 0 };
+  const { wpm: liveWpm, accuracy: liveAccuracy } = (running || finished) 
+    ? calcStats(typed, passage, TEST_DURATION - timeLeft) 
+    : { wpm: 0, accuracy: 0 };
 
   return (
-    <main className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-8" onClick={focusInput}>
+    <main className="min-h-screen bg-slate-950 text-slate-100 p-8" onClick={focusInput}>
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Practice</h1>
-          <button onClick={(e) => { e.stopPropagation(); resetTest(); }} className="px-4 py-2 border rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">New Test</button>
+          <button onClick={(e) => { e.stopPropagation(); resetTest(); }} className="px-4 py-2 border border-slate-700 rounded-lg hover:bg-slate-800">New Test</button>
         </div>
 
-        <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
+        <div className="bg-slate-900 p-6 rounded-xl border border-slate-800">
           <div className="flex justify-between text-sm font-bold mb-4 opacity-70">
             <span>{fmtTime(timeLeft)}</span>
-            <span>WPM: {liveWpm} | Accuracy: {liveAccuracy}%</span>
+            <span>WPM: {finished ? result?.wpm : liveWpm} | Accuracy: {finished ? result?.accuracy : liveAccuracy}%</span>
           </div>
 
           <div className="relative cursor-text" onClick={focusInput}>
             {!running && !finished && (
-              <p className="absolute inset-0 flex items-center justify-center text-slate-400 dark:text-slate-600 animate-pulse z-10 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-sm cursor-pointer">
+              <p className="absolute inset-0 flex items-center justify-center text-slate-500 animate-pulse z-10 bg-slate-900/90 backdrop-blur-sm cursor-pointer">
                 Click here to start your test
               </p>
             )}
-            <p className="leading-loose font-mono text-lg">{renderPassage()}</p>
-            <input ref={inputRef} value={typed} onChange={handleInput} disabled={finished} className="absolute opacity-0 w-0 h-0" />
+            <p className="leading-loose font-mono text-lg">
+              {passage.split("").map((char, i) => (
+                <span key={i} className={`${i < typed.length ? (typed[i] === char ? "text-slate-100" : "text-red-400 bg-red-900/40") : "text-slate-600"} ${i === typed.length && running ? "border-l-2 border-blue-500 animate-pulse" : ""}`}>
+                  {char}
+                </span>
+              ))}
+            </p>
+            <input ref={inputRef} value={typed} onChange={handleInput} disabled={finished} className="absolute opacity-0" />
           </div>
 
           {finished && result && (
-            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
+            <div className="mt-6 pt-6 border-t border-slate-800 flex justify-between items-center">
               <div>
                 <p className="text-sm opacity-60">Result</p>
                 <p className="text-3xl font-bold">{result.wpm} WPM / {result.accuracy}% Acc</p>
               </div>
-              <button onClick={resetTest} className="px-6 py-2 bg-blue-600 text-white rounded-full font-bold">Try Again</button>
+              <button onClick={resetTest} className="px-6 py-2 bg-blue-600 rounded-full font-bold">Try Again</button>
             </div>
           )}
         </div>
