@@ -1,4 +1,7 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import axios from "axios";
+
+const BASE = 'https://typing-website-kr3a.onrender.com/api/v1';
 
 const PASSAGES = [
   "The quick brown fox jumps over the lazy dog. A good typist can type quickly and accurately without constantly looking at the keyboard. Regular practice improves speed, reduces errors, and builds confidence. Consistency is the key to becoming a skilled and efficient typist.",
@@ -13,6 +16,7 @@ const PASSAGES = [
   "Confidence does not come from always being correct. It comes from accepting mistakes and learning from them. People who are willing to take risks often discover new opportunities and ideas. Growth happens when we step outside our comfort zone and embrace challenges.",
 ];
 
+// FIX: Added INITIAL_STATS constant
 const INITIAL_STATS = { avgWpm: 0, avgAccuracy: 0, testsTaken: 0 };
 const TEST_DURATION = 60;
 
@@ -26,13 +30,11 @@ function fmtTime(s) {
   return `${m}:${sec}`;
 }
 
-// ✅ Pure function — no stale closure issues
 function calcStats(typedStr, passageStr, elapsedSeconds) {
   const wordsTyped = typedStr.trim().split(/\s+/).filter(Boolean);
   const referenceWords = passageStr.trim().split(/\s+/);
   const minutes = Math.max(elapsedSeconds / 60, 0.01);
 
-  // Only count fully completed words (not the word currently being typed)
   const completedWords = typedStr.endsWith(" ")
     ? wordsTyped
     : wordsTyped.slice(0, -1);
@@ -58,16 +60,37 @@ export default function Practice() {
   const [running, setRunning] = useState(false);
   const [finished, setFinished] = useState(false);
   const [result, setResult] = useState(null);
+  // FIX: Added missing stats state
+  const [stats, setStats] = useState(INITIAL_STATS);
 
   const inputRef = useRef(null);
   const timerRef = useRef(null);
-
-  // ✅ Use refs to always have fresh values inside setInterval/endTest
   const typedRef = useRef("");
   const timeLeftRef = useRef(TEST_DURATION);
   const passageRef = useRef(passage);
 
   const focusInput = () => inputRef.current?.focus();
+
+  // FIX: Save score to backend after each test
+  async function saveScore(wpm, accuracy) {
+    const token = localStorage.getItem('token');
+    if (!token) return; // not logged in, skip silently
+
+    try {
+      // paragraphId is required by the schema; send a placeholder since passages are hardcoded
+      await axios.post(`${BASE}/score/saveTest`, {
+        wpm,
+        accuracy,
+        duration: TEST_DURATION,
+        paragraphId: '000000000000000000000000', // placeholder ObjectId
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      // Silent fail — don't break the UI if save fails
+      console.warn('Could not save score:', err.response?.data?.message || err.message);
+    }
+  }
 
   function endTest(finalTyped, finalTimeLeft) {
     clearInterval(timerRef.current);
@@ -85,6 +108,9 @@ export default function Practice() {
         Math.round(((prev.avgAccuracy * prev.testsTaken + accuracy) / n) * 10) / 10;
       return { avgWpm: newAvgWpm, avgAccuracy: newAvgAcc, testsTaken: n };
     });
+
+    // FIX: Save to backend
+    saveScore(wpm, accuracy);
   }
 
   const startTimer = useCallback(() => {
@@ -96,7 +122,6 @@ export default function Practice() {
         timeLeftRef.current = next;
         if (next <= 0) {
           clearInterval(timerRef.current);
-          // ✅ Read fresh values from refs — no stale closure
           endTest(typedRef.current, 0);
           return 0;
         }
@@ -123,7 +148,7 @@ export default function Practice() {
   function handleInput(e) {
     if (finished) return;
     const val = e.target.value;
-    typedRef.current = val; // ✅ Keep ref in sync
+    typedRef.current = val;
     if (!running) startTimer();
     setTyped(val);
     if (val.length >= passage.length) {
@@ -152,7 +177,6 @@ export default function Practice() {
     });
   }
 
-  // ✅ Live stats also use the pure calcStats function
   const elapsed = TEST_DURATION - timeLeft;
   const { wpm: liveWpm, accuracy: liveAccuracy } = running || finished
     ? calcStats(typed, passage, elapsed)
@@ -236,12 +260,19 @@ export default function Practice() {
                   <p className="text-3xl font-extrabold text-green-500 tabular-nums">{result.accuracy}%</p>
                 </div>
               </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); resetTest(); }}
-                className="px-6 py-2.5 rounded-full bg-slate-900 dark:bg-cyan-500 text-white dark:text-slate-900 font-semibold text-sm hover:scale-105 transition-all shadow"
-              >
-                Try Again
-              </button>
+              <div className="flex gap-3">
+                {!localStorage.getItem('token') && (
+                  <a href="/login" className="px-5 py-2.5 rounded-full border border-gray-200 dark:border-slate-600 text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-800 transition-all">
+                    Log in to save score
+                  </a>
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); resetTest(); }}
+                  className="px-6 py-2.5 rounded-full bg-slate-900 dark:bg-cyan-500 text-white dark:text-slate-900 font-semibold text-sm hover:scale-105 transition-all shadow"
+                >
+                  Try Again
+                </button>
+              </div>
             </div>
           )}
         </div>
