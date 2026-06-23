@@ -1,113 +1,64 @@
-import { Link } from 'react-router-dom';
+// Medal icons for top 3
+const MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
-// Medal colors for top 3
-const MEDAL = { 0: '🥇', 1: '🥈', 2: '🥉' };
-
-// Props:
-//   data          — array of leaderboard rows
-//   currentUserId — logged-in user id (to highlight their row)
-//   sort / onSort — current sort column and setter
-const LeaderboardTable = ({ data = [], currentUserId, sort, onSort }) => {
-  const SortTh = ({ col, label, align = 'right' }) => (
-    <th
-      className={`px-4 py-3 text-${align} cursor-pointer select-none group`}
-      onClick={() => onSort?.(col)}
-    >
-      <span className={`${sort === col ? 'text-yellow-400' : 'text-gray-400 group-hover:text-gray-200'} transition-colors`}>
-        {label}
-        {sort === col && <span className="ml-1 text-yellow-400">↓</span>}
-      </span>
-    </th>
-  );
-
+// FIX: Backend returns { rank, userId, name, wpm } — updated all field references
+const LeaderboardTable = ({ data = [] }) => {
   if (data.length === 0) {
     return (
-      <div className="text-center py-20 text-gray-500">
+      <div className="text-center py-20 text-gray-500 dark:text-gray-400">
         <div className="text-5xl mb-3">🏁</div>
-        <p>No results yet for this filter.</p>
+        <p>No results yet. Be the first on the board!</p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-gray-700/60">
+    <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-slate-700">
       <table className="w-full text-sm">
-        <thead className="bg-gray-800/80 text-xs uppercase tracking-wider">
+        <thead className="bg-gray-50 dark:bg-slate-800/80 text-xs uppercase tracking-wider">
           <tr>
             <th className="px-4 py-3 text-left text-gray-400 w-12">#</th>
             <th className="px-4 py-3 text-left text-gray-400">Player</th>
-            <SortTh col="wpm"      label="Best WPM" />
-            <SortTh col="accuracy" label="Accuracy" />
-            <SortTh col="tests"    label="Tests"    />
-            <th className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">Streak</th>
+            <th className="px-4 py-3 text-right text-gray-400">Best WPM</th>
           </tr>
         </thead>
         <tbody>
-          {data.map((row, i) => {
-            const isMe    = row.id === currentUserId;
-            const isTop3  = row.rank <= 3;
+          {data.map((row) => {
+            const isTop3 = row.rank <= 3;
+            // FIX: backend sends `name` not `username`, `wpm` not `best_wpm`
+            const displayName = row.name || 'Anonymous';
 
             return (
               <tr
-                key={row.id}
-                className={`border-t border-gray-700/50 transition-colors
-                  ${isMe
-                    ? 'bg-yellow-400/10 border-l-2 border-l-yellow-400'
-                    : 'hover:bg-gray-800/40'}`}
+                key={row.userId}
+                className="border-t border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors"
               >
                 {/* Rank */}
                 <td className="px-4 py-3 font-bold text-center">
                   {isTop3
-                    ? <span className="text-lg">{MEDAL[row.rank - 1]}</span>
-                    : <span className="text-gray-500">#{row.rank}</span>}
+                    ? <span className="text-lg">{MEDAL[row.rank]}</span>
+                    : <span className="text-gray-400 dark:text-gray-500">#{row.rank}</span>}
                 </td>
 
                 {/* Player */}
                 <td className="px-4 py-3">
-                  <Link
-                    to={`/profile/${row.username}`}
-                    className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                  >
-                    {row.avatar_url ? (
-                      <img src={row.avatar_url} className="w-8 h-8 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500
-                                      flex items-center justify-center text-black font-bold text-xs shrink-0">
-                        {row.username[0].toUpperCase()}
-                      </div>
-                    )}
-                    <div>
-                      <div className={`font-semibold ${isMe ? 'text-yellow-400' : 'text-white'}`}>
-                        {row.username}
-                        {isMe && <span className="ml-2 text-xs bg-yellow-400/20 text-yellow-400 px-1.5 py-0.5 rounded-full">You</span>}
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500
+                                    flex items-center justify-center text-white font-bold text-xs shrink-0">
+                      {displayName[0].toUpperCase()}
                     </div>
-                  </Link>
+                    <span className={`font-semibold ${isTop3 ? 'text-yellow-500 dark:text-yellow-400' : 'text-slate-800 dark:text-slate-100'}`}>
+                      {displayName}
+                    </span>
+                  </div>
                 </td>
 
                 {/* Best WPM */}
                 <td className="px-4 py-3 text-right">
-                  <span className={`font-extrabold text-base ${isTop3 ? 'text-yellow-400' : 'text-green-400'}`}>
-                    {row.best_wpm}
+                  <span className={`font-extrabold text-base ${isTop3 ? 'text-yellow-500 dark:text-yellow-400' : 'text-green-500'}`}>
+                    {row.wpm}
                   </span>
-                  <span className="text-gray-500 text-xs ml-1">wpm</span>
-                </td>
-
-                {/* Accuracy */}
-                <td className="px-4 py-3 text-right text-gray-300">
-                  {row.avg_accuracy}%
-                </td>
-
-                {/* Tests */}
-                <td className="px-4 py-3 text-right text-gray-400">
-                  {row.tests_taken}
-                </td>
-
-                {/* Streak (hidden on mobile) */}
-                <td className="px-4 py-3 text-right hidden md:table-cell">
-                  {row.current_streak > 0
-                    ? <span className="text-orange-400">🔥 {row.current_streak}</span>
-                    : <span className="text-gray-600">—</span>}
+                  <span className="text-gray-400 text-xs ml-1">wpm</span>
                 </td>
               </tr>
             );
