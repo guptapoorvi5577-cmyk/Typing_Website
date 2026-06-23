@@ -3,27 +3,34 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const NAV_LINKS = [
   { label: "Home",        path: "/" },
-  { label: "Practice",   path: "/practice" },
+  { label: "Practice",    path: "/practice" },
   { label: "Leaderboard", path: "/leaderboard" },
-  { label: "Profile",    path: "/profile" },
+  { label: "Profile",     path: "/profile" },
 ];
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [darkMode, setDarkMode] = useState(false);
-  // FIX: Track login state from localStorage
+
+  // FIX: Initialize state from localStorage (Lazy initializer)
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark';
+  });
+
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
 
+  // Update theme class and localStorage whenever darkMode state changes
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
+      localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove("dark");
+      localStorage.setItem('theme', 'light');
     }
   }, [darkMode]);
 
-  // Re-check token when route changes (e.g. after login/logout)
+  // Re-check token when route changes (e.g., after login/logout)
   useEffect(() => {
     setIsLoggedIn(!!localStorage.getItem('token'));
   }, [location.pathname]);
@@ -75,7 +82,6 @@ export default function Navbar() {
             {darkMode ? "☀️" : "🌙"}
           </button>
 
-          {/* FIX: Show Logout when logged in, Login when not */}
           {isLoggedIn ? (
             <button
               onClick={handleLogout}
