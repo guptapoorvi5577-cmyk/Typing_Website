@@ -1,4 +1,4 @@
-const BACKEND_URL = "https://typing-website-f8me.onrender.com";
+const BACKEND_URL = "https://typing-website-kr3a.onrender.com";
 
 export const startKeepAlive = () => {
   const ping = async () => {
