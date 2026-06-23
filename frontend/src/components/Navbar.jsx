@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const NAV_LINKS = [
   { label: "Home",        path: "/" },
@@ -10,7 +10,10 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const location = useLocation();
-    const [darkMode, setDarkMode] = useState(false);
+  const navigate = useNavigate();
+  const [darkMode, setDarkMode] = useState(false);
+  // FIX: Track login state from localStorage
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
 
   useEffect(() => {
     if (darkMode) {
@@ -19,6 +22,17 @@ export default function Navbar() {
       document.documentElement.classList.remove("dark");
     }
   }, [darkMode]);
+
+  // Re-check token when route changes (e.g. after login/logout)
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem('token'));
+  }, [location.pathname]);
+
+  function handleLogout() {
+    localStorage.removeItem('token');
+    setIsLoggedIn(false);
+    navigate('/');
+  }
 
   return (
     <nav className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 shadow-sm">
@@ -61,15 +75,24 @@ export default function Navbar() {
             {darkMode ? "☀️" : "🌙"}
           </button>
 
-          <Link
-            to="/login"
-            className="px-4 py-1.5 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold hover:opacity-90 transition-opacity"
-          >
-            Login
-          </Link>
+          {/* FIX: Show Logout when logged in, Login when not */}
+          {isLoggedIn ? (
+            <button
+              onClick={handleLogout}
+              className="px-4 py-1.5 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold hover:opacity-90 transition-opacity"
+            >
+              Logout
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="px-4 py-1.5 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold hover:opacity-90 transition-opacity"
+            >
+              Login
+            </Link>
+          )}
         </div>
       </div>
-
     </nav>
   );
 }
