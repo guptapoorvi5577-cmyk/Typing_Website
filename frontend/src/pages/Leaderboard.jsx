@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import LeaderboardTable from '../components/LeaderboardTable';
 
+const BASE = 'https://typing-website-kr3a.onrender.com/api/v1';
+
 function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [myRank, setMyRank] = useState('Unranked');
@@ -17,7 +19,8 @@ function Leaderboard() {
       return;
     }
 
-    axios.get('https://typing-website-kr3a.onrender.com/api/v1/score/leaderboard', {
+    // FIX: was /leaderboard/leaderboard — correct route is /score/leaderboard
+    axios.get(`${BASE}/score/leaderboard`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then((res) => {
@@ -44,7 +47,15 @@ function Leaderboard() {
         )}
 
         {loading && <p className="text-center text-gray-400">Loading...</p>}
-        {error && <p className="text-center text-red-500">{error}</p>}
+        {error && (
+          <div className="text-center py-16">
+            <div className="text-5xl mb-3">🔒</div>
+            <p className="text-red-500">{error}</p>
+            {error.includes('log in') && (
+              <a href="/login" className="mt-4 inline-block text-blue-600 dark:text-cyan-400 underline">Go to Login</a>
+            )}
+          </div>
+        )}
 
         {!loading && !error && <LeaderboardTable data={leaderboard} />}
       </div>
