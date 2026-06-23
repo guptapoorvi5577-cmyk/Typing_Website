@@ -103,7 +103,14 @@
     border-bottom: 1px solid var(--border);
   }
 }
-
+.cursor {
+  position: absolute;
+  width: 2px;
+  height: 24px; 
+  background-color: var(--accent);
+  transition: left 0.1s linear, top 0.1s linear;
+  will-change: left, top;
+}
 #next-steps ul {
   list-style: none;
   padding: 0;
