@@ -1,18 +1,15 @@
 const Score = require('../models/Score');
 
 exports.leaderBoard = async(req, res)=>{
-
     try{
-
         const currentUserId = req.user.id;
-
         const scores = await Score.aggregate([
-
             {$unwind: '$scoreHistory'},
             {
                 $group:{
                     _id: '$userId',
                     highestWpm: {$max: '$scoreHistory.wpm'},
+                    avgAccuracy: {$avg: '$scoreHistory.accuracy'}
                 }
             },
             {$sort: {highestWpm: -1}},
@@ -30,25 +27,20 @@ exports.leaderBoard = async(req, res)=>{
                     _id: 0,
                     userId: '$_id',
                     name: '$userInfo.name',
-                    wpm: '$highestWpm'
+                    wpm: '$highestWpm',
+                    accuracy: {$round: ['$avgAccuracy', 1]}
                 }
             }
-
         ]);
 
         let myRank = 'Unranked';
-
         const leaderBoardRanks = scores.map((user, index)=>{
-
             const rank = index + 1;
-
             if(user.userId.toString() === currentUserId){
                 myRank = rank;
             }
-
             return {...user, rank: rank};
-
-        })
+        });
 
         res.status(200).json({
             success: true,
@@ -58,16 +50,12 @@ exports.leaderBoard = async(req, res)=>{
             },
             message: 'fetched'
         });
-
     }
     catch(err){
-        
         console.log(err);
         res.status(500).json({
             success: false,
             message: 'internal server error'
-        })
-
+        });
     }
-    
 }
