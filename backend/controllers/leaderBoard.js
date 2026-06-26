@@ -9,7 +9,7 @@ exports.leaderBoard = async(req, res)=>{
                 $group:{
                     _id: '$userId',
                     highestWpm: {$max: '$scoreHistory.wpm'},
-                    avgAccuracy: {$avg: '$scoreHistory.accuracy'}
+                   avgAccuracy: {$avg: {$ifNull: ['$scoreHistory.accuracy', 0]}}
                 }
             },
             {$sort: {highestWpm: -1}},
