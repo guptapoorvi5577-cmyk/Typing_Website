@@ -56,9 +56,9 @@ const LeaderboardTable = ({ data = [] }) => {
                 </td>
 
                 <td className="px-4 py-3 text-right">
-                  <span className="font-extrabold text-base text-green-500">
-                    {row.accuracy}%
-                  </span>
+                 <span className="font-extrabold text-base text-green-500">
+  {row.accuracy != null ? `${row.accuracy}%` : 'N/A'}
+</span>
                 </td>
               </tr>
             );
