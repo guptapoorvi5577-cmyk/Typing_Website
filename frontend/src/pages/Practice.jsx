@@ -58,8 +58,16 @@ export default function Practice() {
     clearInterval(timerRef.current);
     const elapsed = TEST_DURATION - finalTimeLeft;
     const finalStats = calcStats(finalTyped, passage, elapsed);
-    
-    setResult(finalStats);
+
+  
+    if (finalStats.accuracy < 30) {
+      setResult({ ...finalStats, invalid: true });
+      setFinished(true);
+      setRunning(false);
+      return;
+    }
+
+    setResult({ ...finalStats, invalid: false });
     setFinished(true);
     setRunning(false);
 
@@ -112,8 +120,8 @@ export default function Practice() {
     if (val.length >= passage.length) endTest(val, timeLeft - 1);
   }
 
-  const { wpm: liveWpm, accuracy: liveAccuracy } = (running || finished) 
-    ? calcStats(typed, passage, TEST_DURATION - timeLeft) 
+  const { wpm: liveWpm, accuracy: liveAccuracy } = (running || finished)
+    ? calcStats(typed, passage, TEST_DURATION - timeLeft)
     : { wpm: 0, accuracy: 0 };
 
   return (
@@ -151,6 +159,11 @@ export default function Practice() {
               <div>
                 <p className="text-sm opacity-60">Result</p>
                 <p className="text-3xl font-bold">{result.wpm} WPM / {result.accuracy}% Acc</p>
+                {result.invalid && (
+                  <p className="text-red-400 text-sm font-semibold mt-1">
+                    ⚠️ Test invalid — accuracy is less than 30% .
+                  </p>
+                )}
               </div>
               <button onClick={resetTest} className="px-6 py-2 bg-blue-600 rounded-full font-bold">Try Again</button>
             </div>
