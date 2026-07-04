@@ -30,17 +30,6 @@ function fmtTime(s) {
   return `${m}:${sec}`;
 }
 
-function calcStats(typedStr, passageStr, elapsedSeconds) {
-  const minutes = Math.max(elapsedSeconds / 60, 0.01);
-  const wpm = Math.round((typedStr.length / 5) / minutes);
-  let correctChars = 0;
-  for (let i = 0; i < typedStr.length; i++) {
-    if (typedStr[i] === passageStr[i]) correctChars++;
-  }
-  const accuracy = typedStr.length > 0 ? Math.round((correctChars / typedStr.length) * 100 * 10) / 10 : 100;
-  return { wpm, accuracy };
-}
-
 export default function Practice() {
   const [passage, setPassage] = useState(() => randomPassage());
   const [typed, setTyped] = useState("");
@@ -48,6 +37,7 @@ export default function Practice() {
   const [running, setRunning] = useState(false);
   const [finished, setFinished] = useState(false);
   const [result, setResult] = useState(null);
+  const [mistakes,setMistakes]=useState(0);
 
   const inputRef = useRef(null);
   const timerRef = useRef(null);
@@ -57,7 +47,7 @@ export default function Practice() {
   const endTest = useCallback((finalTyped, finalTimeLeft) => {
     clearInterval(timerRef.current);
     const elapsed = TEST_DURATION - finalTimeLeft;
-    const finalStats = calcStats(finalTyped, passage, elapsed,mistakes);
+    const finalStats = calcStats(finalTyped,elapsed,mistakes);
 
   
     if (finalStats.accuracy < 30) {
@@ -80,7 +70,7 @@ export default function Practice() {
         paragraphId: '000000000000000000000000'
       }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
     }
-  }, [passage]);
+  }, [mistakes]);
 
   const startTimer = () => {
     setRunning(true);
@@ -105,14 +95,13 @@ export default function Practice() {
     clearInterval(timerRef.current);
     setPassage(randomPassage());
     setTyped("");
+    setMistakes(0);
     setTimeLeft(TEST_DURATION);
     setRunning(false);
     setFinished(false);
     setResult(null);
     setTimeout(() => inputRef.current?.focus(), 50);
   }
-  const [mistakes, setMistakes] = useState(0);
-  setMistakes(0);
   function handleInput(e) {
   if (finished) return;
 
@@ -135,7 +124,7 @@ export default function Practice() {
     endTest(val, timeLeft);
   }
 }
-  function calcStats(typedStr, passageStr, elapsedSeconds, mistakes) {
+  function calcStats(typedStr, elapsedSeconds, mistakes) {
   const minutes = Math.max(elapsedSeconds / 60, 0.01);
 
   const wpm = Math.round((typedStr.length / 5) / minutes);
@@ -157,9 +146,9 @@ export default function Practice() {
   return { wpm, accuracy };
 }
 
-  const { wpm: liveWpm, accuracy: liveAccuracy } = (running || finished)
-    ? calcStats(typed, passage, TEST_DURATION - timeLeft)
-    : { wpm: 0, accuracy: 0 };
+const { wpm: liveWpm, accuracy: liveAccuracy } = (running || finished)
+  ? calcStats(typed, TEST_DURATION - timeLeft, mistakes)
+  : { wpm: 0, accuracy: 0 };
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 p-8" onClick={focusInput}>
