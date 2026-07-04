@@ -57,7 +57,7 @@ export default function Practice() {
   const endTest = useCallback((finalTyped, finalTimeLeft) => {
     clearInterval(timerRef.current);
     const elapsed = TEST_DURATION - finalTimeLeft;
-    const finalStats = calcStats(finalTyped, passage, elapsed);
+    const finalStats = calcStats(finalTyped, passage, elapsed,mistakes);
 
   
     if (finalStats.accuracy < 30) {
@@ -111,14 +111,51 @@ export default function Practice() {
     setResult(null);
     setTimeout(() => inputRef.current?.focus(), 50);
   }
-
+  const [mistakes, setMistakes] = useState(0);
+  setMistakes(0);
   function handleInput(e) {
-    if (finished) return;
-    if (!running) startTimer();
-    const val = e.target.value;
-    setTyped(val);
-    if (val.length >= passage.length) endTest(val, timeLeft - 1);
+  if (finished) return;
+
+  if (!running) startTimer();
+
+  const val = e.target.value;
+
+  // Detect only newly typed characters
+  if (val.length > typed.length) {
+    const index = val.length - 1;
+
+    if (val[index] !== passage[index]) {
+      setMistakes(prev => prev + 1);
+    }
   }
+
+  setTyped(val);
+
+  if (val.length >= passage.length) {
+    endTest(val, timeLeft);
+  }
+}
+  function calcStats(typedStr, passageStr, elapsedSeconds, mistakes) {
+  const minutes = Math.max(elapsedSeconds / 60, 0.01);
+
+  const wpm = Math.round((typedStr.length / 5) / minutes);
+
+  const totalKeystrokes = typedStr.length + mistakes;
+
+  const accuracy =
+    totalKeystrokes > 0
+      ? Math.max(
+          0,
+          Math.round(
+            ((typedStr.length - mistakes) / totalKeystrokes) *
+              100 *
+              10
+          ) / 10
+        )
+      : 100;
+
+  return { wpm, accuracy };
+}
 
   const { wpm: liveWpm, accuracy: liveAccuracy } = (running || finished)
     ? calcStats(typed, passage, TEST_DURATION - timeLeft)
