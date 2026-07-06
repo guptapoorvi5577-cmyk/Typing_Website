@@ -104,24 +104,19 @@ export default function Practice() {
   }
   function handleInput(e) {
   if (finished) return;
-
   if (!running) startTimer();
-
   const val = e.target.value;
-
-  // Detect only newly typed characters
   if (val.length > typed.length) {
     const index = val.length - 1;
-
     if (val[index] !== passage[index]) {
-      setMistakes(prev => prev + 1);
+      setMistakes((prev) => prev + 1);
     }
   }
 
   setTyped(val);
-
-  if (val.length >= passage.length) {
-    endTest(val, timeLeft);
+  if (val.length >= passage.length * 0.9) {
+    const nextSentence = PASSAGES[Math.floor(Math.random() * PASSAGES.length)];
+    setPassage((prev) => `${prev} ${nextSentence}`);
   }
 }
   function calcStats(typedStr, elapsedSeconds, mistakes) {
