@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-const NAV_LINKS = [
+const BASE_NAV_LINKS = [
   { label: "Home",        path: "/" },
   { label: "Practice",    path: "/practice" },
   { label: "Leaderboard", path: "/leaderboard" },
-  { label: "Profile",     path: "/profile" },
 ];
+
+const PROFILE_LINK = { label: "Profile", path: "/profile" };
 
 export default function Navbar() {
   const location = useLocation();
@@ -18,6 +19,8 @@ export default function Navbar() {
   });
 
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+
+  const NAV_LINKS = isLoggedIn ? [...BASE_NAV_LINKS, PROFILE_LINK] : BASE_NAV_LINKS;
 
   useEffect(() => {
     if (darkMode) {
